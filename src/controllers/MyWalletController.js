@@ -25,7 +25,39 @@ export const getEntries = (async (req, res) => {
     }    
 })
 
+
 export const newEntry = (async (req, res) => {
+    const value = res.locals.value
+    const { authorization } = req.headers
+
+    const token = authorization?.replace("Bearer ", '')
+
+    if (!token) return res.status(422).send("Informe o token!")
+
+
+    try {
+        const isUserLogged = await db.collection("sessions").findOne({ token })
+
+        if (!isUserLogged) return res.status(401).send("Você não está logado!")
+
+        await db.collection("carteira").insertOne({
+            value: value.value,
+            type: value.type,
+            descricao: value.description,
+            date: value.date,
+            userId: isUserLogged.userId })
+
+        res.status(201).send("Nova saída cadastrada")
+
+    } catch (error) {
+        res.sendStatus(500)
+        console.log(error)
+
+    }
+})
+
+
+/*export const newEntary = (async (req, res) => {
     const value = res.locals.value
     const { authorization } = req.headers
     const token = authorization?.replace("Bearer", "")
@@ -56,4 +88,4 @@ export const newEntry = (async (req, res) => {
     catch (error) {
         res.status(500).send(error.message)
     }
-})
+})*/
